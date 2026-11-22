@@ -2,11 +2,16 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+import '../../components/MenuNeoGlassNavigationBar.dart';
 import '../../providers/map_provider.dart';
 import '../../components/vehicle_selection.dart';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -37,7 +42,7 @@ class _MapScreenState extends State<MapScreen> {
   bool _isSelectingByCenter = false;
 
   // Configuración del viaje y estimación.
-  String _selectedVehicle = 'car';
+  final String _selectedVehicle = 'car';
   final TextEditingController _consumptionController = TextEditingController(
     text: '8',
   );
@@ -49,11 +54,11 @@ class _MapScreenState extends State<MapScreen> {
   // CONFIGURACIÓN DEL PANEL
   // ============================================================
 
-  static const double _panelHeightClosed = 220;
+  static double _panelHeightClosed = 300;
   double _panelHeightOpen = 0;
 
   double _fabHeight = 180;
-  static const double _initialFabHeight = 180;
+  static const double _initialFabHeight = 295;
 
   // ============================================================
   // COORDENADAS INICIALES: PIRIBEBUY (Respaldo si falla GPS)
@@ -79,7 +84,7 @@ class _MapScreenState extends State<MapScreen> {
   Future<void> _initCurrentLocation() async {
     final provider = context.read<MapProvider>();
     await _goToCurrentLocation(provider);
-    
+
     if (provider.currentLocation != null && mounted) {
       _originController.text = 'Mi ubicación actual';
     }
@@ -193,8 +198,8 @@ class _MapScreenState extends State<MapScreen> {
     if (_mapboxMap == null) return;
 
     final cameraState = await _mapboxMap!.getCameraState();
-    if (cameraState?.center != null) {
-      final coordinates = cameraState!.center!.coordinates;
+    if (cameraState.center != null) {
+      final coordinates = cameraState.center.coordinates;
       final lng = coordinates[0]!.toDouble();
       final lat = coordinates[1]!.toDouble();
 
@@ -204,11 +209,13 @@ class _MapScreenState extends State<MapScreen> {
 
       setState(() {
         _isSelectingByCenter = false;
-        _destinationController.text = provider.placeAddress ?? 'Ubicación central';
+        _destinationController.text =
+            provider.placeAddress ?? 'Ubicación central';
       });
 
       await _calculateRoute(provider);
-      _openPanel();
+      //_openPanel();
+      // context.push('/travel-step-2');
     }
   }
 
@@ -248,7 +255,7 @@ class _MapScreenState extends State<MapScreen> {
   List<VehicleOption> _getAvailableVehicles(MapProvider provider) {
     // Distancia en kilómetros obtenida de la ruta de Mapbox (por defecto 5 km si es null)
     final double distanceKm = provider.routeDistance ?? 5.0;
-    
+
     // Tarifas base estimadas por kilómetro (ej. en Guaraníes Gs.)
     final double baseMoto = 4500;
     final double perKmMoto = 1800;
@@ -302,11 +309,12 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    _panelHeightOpen = screenHeight * 1.2;
+    _panelHeightOpen = screenHeight * 0.5;
 
     return Consumer<MapProvider>(
       builder: (context, provider, _) {
         return Scaffold(
+          appBar: AppBar(title: Text('Eliga un destino')),
           body: Stack(
             alignment: Alignment.topCenter,
             children: [
@@ -349,11 +357,19 @@ class _MapScreenState extends State<MapScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    onPressed: () => _confirmCenterLocation(provider),
+                    onPressed: () {
+                      _confirmCenterLocation(provider);
+                      setState() {
+                        _panelHeightClosed = 340;
+                      }
+                    },
                     icon: const Icon(Icons.check, color: Colors.greenAccent),
                     label: const Text(
                       'Confirmar ubicación',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -446,6 +462,7 @@ class _MapScreenState extends State<MapScreen> {
                 ),
             ],
           ),
+          bottomNavigationBar: MenuNeoGlassNagivationBar(selectedItem: 1),
         );
       },
     );
@@ -461,7 +478,8 @@ class _MapScreenState extends State<MapScreen> {
     ScrollController scrollController,
   ) {
     // Si ya se calculó la ruta, mostramos directamente el selector de vehículos
-    if (provider.currentRoute != null) {
+    /*if (provider.currentRoute != null) {
+      context.push('/travel-step-2');
       return VehicleSelectionWidget(
         options: _getAvailableVehicles(provider),
         currencySymbol: 'Gs.',
@@ -471,13 +489,15 @@ class _MapScreenState extends State<MapScreen> {
         onConfirmPressed: (selectedVehicle) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Buscando conductor para ${selectedVehicle.name}...'),
+              content: Text(
+                'Buscando conductor para ${selectedVehicle.name}...',
+              ),
               backgroundColor: Colors.green,
             ),
           );
         },
       );
-    }
+    }*/
 
     // Si aún no hay ruta, mostramos la interfaz normal de búsqueda y configuración
     final theme = Theme.of(context);
@@ -573,7 +593,9 @@ class _MapScreenState extends State<MapScreen> {
     final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.65,
+        ),
         borderRadius: BorderRadius.circular(17),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
@@ -586,7 +608,10 @@ class _MapScreenState extends State<MapScreen> {
           hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
           prefixIcon: const Icon(Icons.trip_origin, color: Colors.blue),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 17, horizontal: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 17,
+            horizontal: 12,
+          ),
         ),
       ),
     );
@@ -596,7 +621,9 @@ class _MapScreenState extends State<MapScreen> {
     final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(
+          alpha: 0.65,
+        ),
         borderRadius: BorderRadius.circular(17),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
@@ -621,13 +648,19 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               IconButton(
                 tooltip: 'Buscar por el centro del mapa',
-                onPressed: () => _startCenterCapture(),
+                onPressed: () {
+                  _startCenterCapture();
+                  // context.push('/travel-step-2');
+                },
                 icon: const Icon(Icons.location_pin),
               ),
             ],
           ),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 17, horizontal: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 17,
+            horizontal: 12,
+          ),
         ),
       ),
     );
@@ -647,7 +680,7 @@ class _MapScreenState extends State<MapScreen> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: provider.searchResults.length,
-          separatorBuilder: (_, __) => const Divider(height: 1, indent: 55),
+          separatorBuilder: (_, _) => const Divider(height: 1, indent: 55),
           itemBuilder: (context, index) {
             final item = provider.searchResults[index];
             return ListTile(
@@ -656,10 +689,20 @@ class _MapScreenState extends State<MapScreen> {
                 radius: 18,
                 child: Icon(Icons.location_on_outlined, size: 19),
               ),
-              title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-              subtitle: Text(item.address, maxLines: 2, overflow: TextOverflow.ellipsis),
+              title: Text(
+                item.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                item.address,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               trailing: const Icon(Icons.chevron_right, size: 20),
-              onTap: provider.loading ? null : () => _selectDestination(provider, item),
+              onTap: provider.loading
+                  ? null
+                  : () => _selectDestination(provider, item),
             );
           },
         ),

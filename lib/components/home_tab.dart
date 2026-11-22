@@ -2,12 +2,7 @@
 import 'package:flutter/material.dart';
 
 class HomeTab extends StatelessWidget {
-  final VoidCallback onTravel;
-
-  const HomeTab({
-    super.key,
-    required this.onTravel,
-  });
+  const HomeTab({super.key});
 
   @override
   Widget build(BuildContext context) {

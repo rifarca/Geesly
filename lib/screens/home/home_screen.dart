@@ -1,13 +1,12 @@
 
 import 'package:flutter/material.dart';
 
+import '../../components/home_tab.dart';
 import '../map/map_screen.dart';
 import '../profile/profile_screen.dart';
-import '../../components/home_tab.dart';
+
 
 class HomeScreen extends StatefulWidget {
-
-
   const HomeScreen({super.key});
 
   @override
@@ -23,13 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
-   _screens = [
-  HomeTab(
-    onTravel: () => _onItemSelected(1),
-  ),
-  const MapScreen(),
-  const ProfileScreen(),
-];
+    _screens = const [HomeTab(), MapScreen(), ProfileScreen()];
   }
 
   void _onItemSelected(int index) {

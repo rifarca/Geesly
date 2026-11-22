@@ -45,6 +45,8 @@ dependencies:
   http: ^1.5.0
   uuid: ^4.5.1
   provider: ^6.1.5
+  flutter_dotenv: ^6.0.2
+  neo_glass_navigation_bar: ^0.1.5
 dev_dependencies:
   flutter_test:
     sdk: flutter

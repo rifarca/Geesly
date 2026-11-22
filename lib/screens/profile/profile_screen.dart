@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:geesly/components/MenuNeoGlassNavigationBar.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -92,6 +93,7 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
+      bottomNavigationBar: MenuNeoGlassNagivationBar(selectedItem: 2),
     );
   }
 }

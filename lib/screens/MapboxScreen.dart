@@ -4,11 +4,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart'; 
-import '../components/BottomNavigationBarComponent.dart';
+
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart'; 
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+import '../components/MenuNeoGlassNavigationBar.dart';
 
 class MapboxScreen extends StatefulWidget {
   const MapboxScreen({super.key});
@@ -21,7 +23,7 @@ class _MapboxScreenState extends State<MapboxScreen> {
   final double _initFabHeight = 120.0;
   double _fabHeight = 0;
   double _panelHeightOpen = 0;
-  double _panelHeightClosed = 95.0;
+  final double _panelHeightClosed = 95.0;
 
   // Coordenadas exactas de Piribebuy, Paraguay
   final LatLng _piribebuyCoords = const LatLng(-25.4783, -57.0544);
@@ -88,7 +90,7 @@ class _MapboxScreenState extends State<MapboxScreen> {
     _panelHeightOpen = MediaQuery.of(context).size.height * .80;
 
     return Scaffold(
-      bottomNavigationBar: BottomNavigationBarComponent(item: 1),
+      bottomNavigationBar: MenuNeoGlassNagivationBar(selectedItem: 1),
       body: Stack(
         alignment: Alignment.topCenter,
         children: <Widget>[
@@ -283,7 +285,7 @@ class _MapboxScreenState extends State<MapboxScreen> {
   int _accuracyBorderColor = 0;
   double _puckScale = 10.0;
 
-  _onMapCreated(MapboxMap mapboxMap) {
+  void _onMapCreated(MapboxMap mapboxMap) {
     this.mapboxMap = mapboxMap;
   }
 

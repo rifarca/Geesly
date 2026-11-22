@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:geesly/routes/config.dart';
+import 'package:geesly/providers/routes/config.dart';
 import 'package:provider/provider.dart';
 import 'core/mapbox/mapbox_config.dart';
 import 'providers/map_provider.dart';
-import 'screens/home/home_screen.dart';
+import 'state/trip_box.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   MapboxConfig.initialize();
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => MapProvider(),
-      child: const GeeslyApp(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MapProvider()),
+        ChangeNotifierProvider(create: (_) => TripBox()),
+      ],
+      child: GeeslyApp(),
     ),
   );
 }

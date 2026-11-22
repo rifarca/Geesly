@@ -29,7 +29,7 @@ class VehicleSelectionWidget extends StatefulWidget {
   final String? initialSelectedId;
   final ValueChanged<VehicleOption> onVehicleSelected;
   final ValueChanged<VehicleOption> onConfirmPressed;
-  final ScrollController? scrollController; // <-- NUEVO PARÁMETRO
+  final ScrollController? scrollController; // Conectado al SlidingUpPanel
 
   const VehicleSelectionWidget({
     super.key,
@@ -38,8 +38,9 @@ class VehicleSelectionWidget extends StatefulWidget {
     required this.onConfirmPressed,
     this.currencySymbol = 'Gs.',
     this.initialSelectedId,
-    this.scrollController, // <-- NUEVO PARÁMETRO
+    this.scrollController,
   });
+
   @override
   State<VehicleSelectionWidget> createState() => _VehicleSelectionWidgetState();
 }
@@ -62,7 +63,6 @@ class _VehicleSelectionWidgetState extends State<VehicleSelectionWidget> {
   /// Formatea el precio con separador de miles si es necesario
   String _formatPrice(double price) {
     if (widget.currencySymbol == 'Gs.') {
-      // Formato sin decimales para Guaraníes (ej. 18.500)
       final intVal = price.round().toString();
       final reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
       return '${widget.currencySymbol} ${intVal.replaceAllMapped(reg, (Match m) => '${m[1]}.')}';
@@ -84,7 +84,6 @@ class _VehicleSelectionWidgetState extends State<VehicleSelectionWidget> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Indicador visual de arrastre (Handlebar para el SlidingUpPanel)
           const SizedBox(height: 12),
           Container(
             width: 40,
@@ -95,8 +94,6 @@ class _VehicleSelectionWidgetState extends State<VehicleSelectionWidget> {
             ),
           ),
           const SizedBox(height: 12),
-
-          // Título superior
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
@@ -123,15 +120,12 @@ class _VehicleSelectionWidgetState extends State<VehicleSelectionWidget> {
             ),
           ),
           const SizedBox(height: 8),
-
-          // Lista de opciones de vehículos
-          Flexible(
+          Expanded(
             child: ListView.separated(
-              shrinkWrap: true,
-              physics: const ClampingScrollPhysics(),
+              controller: widget.scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: widget.options.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final vehicle = widget.options[index];
                 final isSelected = vehicle.id == _selectedId;
@@ -148,15 +142,13 @@ class _VehicleSelectionWidgetState extends State<VehicleSelectionWidget> {
               },
             ),
           ),
-
-          // Botón inferior fijo de confirmación
           Container(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -4),
                 ),
@@ -168,7 +160,7 @@ class _VehicleSelectionWidgetState extends State<VehicleSelectionWidget> {
               child: ElevatedButton(
                 onPressed: () => widget.onConfirmPressed(_selectedVehicle),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF111827), // Negro elegante tipo Uber/Bolt
+                  backgroundColor: const Color(0xFF111827),
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -190,7 +182,7 @@ class _VehicleSelectionWidgetState extends State<VehicleSelectionWidget> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -213,7 +205,6 @@ class _VehicleSelectionWidgetState extends State<VehicleSelectionWidget> {
   }
 }
 
-/// Tarjeta individual de cada vehículo
 class _VehicleTile extends StatelessWidget {
   final VehicleOption vehicle;
   final bool isSelected;
@@ -248,7 +239,6 @@ class _VehicleTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // Ícono / Avatar del vehículo
             Container(
               width: 52,
               height: 52,
@@ -263,8 +253,6 @@ class _VehicleTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 14),
-
-            // Detalles (Nombre, Capacidad, ETA)
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,8 +296,6 @@ class _VehicleTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-
-            // Precio y etiqueta opcional de promo
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
