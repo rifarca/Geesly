@@ -1,9 +1,10 @@
 // ignore: unused_import
 import 'package:flutter/material.dart';
+import 'package:geesly/screens/home_screen.dart';
 import 'package:geesly/screens/profile/profile_screen.dart';
 import 'package:geesly/screens/trip_flow_screen.dart';
 import 'package:go_router/go_router.dart';
-import '../../screens/home/home_screen.dart';
+
 
 
 final GoRouter appRouter = GoRouter(
@@ -11,7 +12,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/',
       name: 'home',
-      builder: (context, state) => TripFlowScreen(),
+      builder: (context, state) => HomeScreen(),
     ),
     GoRoute(
       path: '/trip',

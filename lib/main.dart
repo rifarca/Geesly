@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:geesly/providers/routes/config.dart';
+import 'package:geesly/routes/config.dart';
 import 'package:provider/provider.dart';
 import 'core/mapbox/mapbox_config.dart';
 import 'providers/map_provider.dart';
