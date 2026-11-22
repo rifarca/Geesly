@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:geesly/components/MenuNeoGlassNavigationBar.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -9,6 +10,7 @@ class HomeScreen extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
+      bottomNavigationBar: MenuNeoGlassNagivationBar(selectedItem: 0),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(22),
