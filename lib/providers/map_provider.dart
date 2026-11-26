@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
+import '../components/BoltMarkerPainter.dart';
 import '../models/map_location.dart';
 import '../models/map_marker.dart';
 import '../models/map_route.dart';
@@ -9,22 +10,15 @@ import '../services/location_service.dart';
 import '../services/mapbox_directions_service.dart';
 import '../services/mapbox_search_service.dart';
 
-class MapProvider extends ChangeNotifier {
-  // ============================================================
-  // SERVICIOS
-  // ============================================================
 
+class MapProvider extends ChangeNotifier {
   final LocationService _locationService = LocationService();
   final MapboxSearchService _searchService = MapboxSearchService();
   final MapboxDirectionsService _directionsService = MapboxDirectionsService();
 
-  // ============================================================
-  // MAPBOX
-  // ============================================================
-
   MapboxMap? _map;
 
-  CircleAnnotationManager? _markerManager;
+  PointAnnotationManager? _pointManager;
   PolylineAnnotationManager? _routeManager;
 
   Future<void>? _initializationFuture;
@@ -32,56 +26,41 @@ class MapProvider extends ChangeNotifier {
   bool mapReady = false;
   bool loading = false;
 
-  // ============================================================
-  // ESTADO
-  // ============================================================
-
   MapLocation? currentLocation;
+  String? _originStreetName;
+
   MapLocation? selectedDestination;
   MapSearchResult? selectedDestinationDetails;
   MapRoute? currentRoute;
 
   final List<MapMarker> markers = [];
-
   List<MapSearchResult> searchResults = [];
 
   String? error;
   String? _activeSearchQuery;
-
   int _searchGeneration = 0;
-
-  // ============================================================
-  // INFORMACIÓN REAL DEL DESTINO
-  // ============================================================
 
   String? _placeName;
   String? _placeAddress;
 
-  /// Nombre real del lugar seleccionado.
+  // Podés configurar assets customizados para origen y destino (opcional)
+  final String? originAssetIcon = 'assets/ic_origin.png';
+  final String? destinationAssetIcon = 'assets/ic_destination.png';
+
   String? get placeName => _placeName;
-
-  /// Dirección completa del lugar seleccionado.
   String? get placeAddress => _placeAddress;
-
-  /// Indica si existe un destino seleccionado.
+  String? get originStreetName => _originStreetName;
   bool get hasSelectedDestination => selectedDestination != null;
-
   double? get routeDistance => null;
-
-  // ============================================================
-  // INICIALIZAR MAPA
-  // ============================================================
 
   Future<void> onMapCreated(MapboxMap map) async {
     _map = map;
-
     mapReady = false;
-    _markerManager = null;
+    _pointManager = null;
     _routeManager = null;
 
     try {
       await _initializeAnnotations();
-
       mapReady = true;
       error = null;
     } catch (e) {
@@ -100,7 +79,6 @@ class MapProvider extends ChangeNotifier {
     }
 
     final map = _map;
-
     if (map == null) {
       throw StateError('El mapa todavía no está disponible.');
     }
@@ -118,15 +96,13 @@ class MapProvider extends ChangeNotifier {
   }
 
   Future<void> _createAnnotationManagers(MapboxMap map) async {
-    final markerManager = await map.annotations.createCircleAnnotationManager();
-
+    final pointManager = await map.annotations.createPointAnnotationManager();
     final routeManager = await map.annotations
         .createPolylineAnnotationManager();
 
-    // Evitar asignar administradores de un mapa anterior.
     if (!identical(_map, map)) return;
 
-    _markerManager = markerManager;
+    _pointManager = pointManager;
     _routeManager = routeManager;
   }
 
@@ -135,13 +111,13 @@ class MapProvider extends ChangeNotifier {
       throw StateError('El mapa no está disponible.');
     }
 
-    if (_markerManager != null && _routeManager != null) {
+    if (_pointManager != null && _routeManager != null) {
       return;
     }
 
     await _initializeAnnotations();
 
-    if (_markerManager == null || _routeManager == null) {
+    if (_pointManager == null || _routeManager == null) {
       throw StateError(
         'No se pudieron inicializar los administradores del mapa.',
       );
@@ -150,17 +126,13 @@ class MapProvider extends ChangeNotifier {
     mapReady = true;
   }
 
-  // ============================================================
-  // UBICACIÓN ACTUAL
-  // ============================================================
-
   Future<void> goToCurrentLocation() async {
     await _run(() async {
       await _ensureMapReady();
 
       final location = await _locationService.currentLocation();
-
       currentLocation = location;
+      _originStreetName = await _resolveStreetName(location);
 
       await _moveCamera(location, zoom: 15);
 
@@ -170,13 +142,19 @@ class MapProvider extends ChangeNotifier {
     });
   }
 
-  // ============================================================
-  // MOVER CÁMARA
-  // ============================================================
+  Future<String> _resolveStreetName(MapLocation location) async {
+    try {
+      final res = await _searchService.reverseGeocode(location);
+      if (res.name.trim().isNotEmpty) return res.name.trim();
+      if (res.address.trim().isNotEmpty) return res.address.trim();
+    } catch (_) {
+      // Si falla reverseGeocode, usamos etiqueta por defecto sin cortar el flujo
+    }
+    return 'Tu ubicación';
+  }
 
   Future<void> _moveCamera(MapLocation location, {double zoom = 15}) async {
     final map = _map;
-
     if (map == null) {
       throw StateError('El mapa no está disponible.');
     }
@@ -191,9 +169,27 @@ class MapProvider extends ChangeNotifier {
     );
   }
 
-  // ============================================================
-  // BUSCAR DIRECCIONES
-  // ============================================================
+  Future<void> _fitRouteBounds(
+    MapLocation origin,
+    MapLocation destination,
+  ) async {
+    final map = _map;
+    if (map == null) return;
+
+    final points = [
+      Point(coordinates: Position(origin.longitude, origin.latitude)),
+      Point(coordinates: Position(destination.longitude, destination.latitude)),
+    ];
+
+    final camera = await map.cameraForCoordinates(
+      points,
+      MbxEdgeInsets(top: 140, left: 60, bottom: 260, right: 60),
+      null,
+      null,
+    );
+
+    await map.flyTo(camera, MapAnimationOptions(duration: 300));
+  }
 
   Future<void> search(String query) async {
     final trimmed = query.trim();
@@ -203,7 +199,6 @@ class MapProvider extends ChangeNotifier {
       searchResults = [];
       error = null;
       _activeSearchQuery = null;
-
       notifyListeners();
       return;
     }
@@ -220,7 +215,6 @@ class MapProvider extends ChangeNotifier {
         proximity: currentLocation,
       );
 
-      // Ignorar respuestas de búsquedas anteriores.
       if (generation != _searchGeneration) return;
 
       searchResults = results;
@@ -237,24 +231,17 @@ class MapProvider extends ChangeNotifier {
     }
   }
 
-  // ============================================================
-  // SELECCIONAR RESULTADO DEL BUSCADOR
-  // ============================================================
-
   Future<void> selectSearchResult(MapSearchResult suggestion) async {
     _searchGeneration++;
 
     await _run(() async {
       await _ensureMapReady();
 
-      // Geocoding v6 ya devuelve coordenadas en suggest().
-      // Retrieve queda como respaldo.
       final result = suggestion.location != null
           ? suggestion
           : await _searchService.retrieve(suggestion.id);
 
       final location = result.location;
-
       if (location == null) {
         throw Exception('El resultado no contiene coordenadas válidas.');
       }
@@ -262,10 +249,6 @@ class MapProvider extends ChangeNotifier {
       await _setSelectedDestination(result, location);
     });
   }
-
-  // ============================================================
-  // SELECCIONAR DESTINO TOCANDO EL MAPA
-  // ============================================================
 
   Future<void> selectMapCoordinate({
     required double latitude,
@@ -277,33 +260,25 @@ class MapProvider extends ChangeNotifier {
       await _ensureMapReady();
 
       final location = MapLocation(latitude: latitude, longitude: longitude);
-
       final result = await _searchService.reverseGeocode(location);
 
       await _setSelectedDestination(result, location);
     });
   }
 
-  // ============================================================
-  // GUARDAR DESTINO SELECCIONADO
-  // ============================================================
-
   Future<void> _setSelectedDestination(
     MapSearchResult result,
     MapLocation location,
   ) async {
-    // Eliminar ruta y marcador anteriores.
     await _routeManager?.deleteAll();
-    await _markerManager?.deleteAll();
+    await _pointManager?.deleteAll();
 
     currentRoute = null;
     markers.clear();
 
-    // Guardar coordenadas y detalles.
     selectedDestination = location;
     selectedDestinationDetails = result;
 
-    // Guardar nombre y dirección reales.
     _placeName = result.name.trim().isNotEmpty
         ? result.name.trim()
         : 'Ubicación seleccionada';
@@ -312,7 +287,6 @@ class MapProvider extends ChangeNotifier {
         ? result.address.trim()
         : 'Dirección no disponible';
 
-    // Crear marcador del destino.
     final marker = MapMarker(
       id: result.id,
       title: _placeName!,
@@ -320,28 +294,36 @@ class MapProvider extends ChangeNotifier {
       location: location,
     );
 
-    await addMarker(marker);
+    await addBoltMarker(
+      marker: marker,
+      isOrigin: false,
+      assetIconPath: destinationAssetIcon,
+    );
 
-    // Limpiar resultados anteriores.
     searchResults = [];
     _activeSearchQuery = null;
 
-    // Centrar mapa en el destino.
     await _moveCamera(location, zoom: 16);
   }
 
-  // ============================================================
-  // AGREGAR MARCADOR
-  // ============================================================
-
-  Future<void> addMarker(MapMarker marker) async {
+  /// Dibuja un marcador estilo Bolt (píldora con calle + ícono customizado).
+  Future<void> addBoltMarker({
+    required MapMarker marker,
+    required bool isOrigin,
+    String? assetIconPath,
+  }) async {
     await _ensureMapReady();
 
-    final manager = _markerManager;
-
+    final manager = _pointManager;
     if (manager == null) {
       throw StateError('El administrador de marcadores no está disponible.');
     }
+
+    final Uint8List markerBytes = await BoltMarkerPainter.buildMarkerBytes(
+      streetName: marker.title,
+      isOrigin: isOrigin,
+      assetIconPath: assetIconPath,
+    );
 
     final coordinate = Point(
       coordinates: Position(
@@ -351,41 +333,42 @@ class MapProvider extends ChangeNotifier {
     );
 
     await manager.create(
-      CircleAnnotationOptions(
+      PointAnnotationOptions(
         geometry: coordinate,
-        circleRadius: 10,
-        circleColor: 0xFF10B981,
-        circleStrokeColor: 0xFFFFFFFF,
-        circleStrokeWidth: 2,
+        image: markerBytes,
+        iconAnchor: IconAnchor.BOTTOM,
       ),
     );
 
     markers.removeWhere((item) => item.id == marker.id);
-
     markers.add(marker);
-
     notifyListeners();
   }
 
-  // ============================================================
-  // CALCULAR RUTA
-  // ============================================================
-
+  /// Calcula la ruta y coloca los marcadores estilo Bolt de origen y destino.
   Future<void> calculateRoute({String profile = 'driving'}) async {
     await _run(() async {
       await _ensureMapReady();
 
-      if (selectedDestination == null) {
+      final destination = selectedDestination;
+      if (destination == null) {
         throw Exception(
           'Primero buscá una dirección o seleccioná un punto en el mapa.',
         );
       }
 
       currentLocation ??= await _locationService.currentLocation();
+      final origin = currentLocation!;
+
+      _originStreetName ??= await _resolveStreetName(origin);
+      final String destStreet =
+          (_placeName != null && _placeName!.trim().isNotEmpty)
+          ? _placeName!
+          : await _resolveStreetName(destination);
 
       final route = await _directionsService.getRoute(
-        origin: currentLocation!,
-        destination: selectedDestination!,
+        origin: origin,
+        destination: destination,
         profile: profile,
       );
 
@@ -396,23 +379,56 @@ class MapProvider extends ChangeNotifier {
       currentRoute = route;
 
       await _drawRoute(route);
+      await _drawOriginAndDestinationMarkers(
+        origin: origin,
+        originStreet: _originStreetName!,
+        destination: destination,
+        destinationStreet: destStreet,
+      );
+      await _fitRouteBounds(origin, destination);
     });
   }
 
-  // ============================================================
-  // DIBUJAR RUTA
-  // ============================================================
+  Future<void> _drawOriginAndDestinationMarkers({
+    required MapLocation origin,
+    required String originStreet,
+    required MapLocation destination,
+    required String destinationStreet,
+  }) async {
+    await _pointManager?.deleteAll();
+    markers.clear();
+
+    await addBoltMarker(
+      marker: MapMarker(
+        id: 'route_origin',
+        title: originStreet,
+        description: 'Origen',
+        location: origin,
+      ),
+      isOrigin: true,
+      assetIconPath: originAssetIcon,
+    );
+
+    await addBoltMarker(
+      marker: MapMarker(
+        id: 'route_destination',
+        title: destinationStreet,
+        description: _placeAddress ?? 'Destino',
+        location: destination,
+      ),
+      isOrigin: false,
+      assetIconPath: destinationAssetIcon,
+    );
+  }
 
   Future<void> _drawRoute(MapRoute route) async {
     await _ensureMapReady();
 
     final manager = _routeManager;
-
     if (manager == null) {
       throw StateError('El administrador de rutas no está disponible.');
     }
 
-    // LineString recibe List<Position>, no List<Point>.
     final List<Position> coordinates = route.coordinates.map((point) {
       return Position(point.longitude, point.latitude);
     }).toList();
@@ -432,72 +448,47 @@ class MapProvider extends ChangeNotifier {
     );
   }
 
-  // ============================================================
-  // LIMPIAR RUTA Y DESTINO
-  // ============================================================
-
   Future<void> clearRoute() async {
     await _run(() async {
       await _ensureMapReady();
 
       await _routeManager?.deleteAll();
-      await _markerManager?.deleteAll();
+      await _pointManager?.deleteAll();
 
       currentRoute = null;
       selectedDestination = null;
       selectedDestinationDetails = null;
-
-      // Limpiar nombre y dirección.
       _placeName = null;
       _placeAddress = null;
 
       markers.clear();
       searchResults = [];
-
       _activeSearchQuery = null;
       _searchGeneration++;
     });
   }
 
-  // ============================================================
-  // LIMPIAR MARCADORES
-  // ============================================================
-
   Future<void> clearMarkers() async {
     await _run(() async {
       await _ensureMapReady();
-
-      await _markerManager?.deleteAll();
-
+      await _pointManager?.deleteAll();
       markers.clear();
     });
   }
 
-  // ============================================================
-  // LIMPIAR BÚSQUEDA
-  // ============================================================
-
   void clearSearch() {
     _searchGeneration++;
-
     searchResults = [];
     _activeSearchQuery = null;
     error = null;
-
     notifyListeners();
   }
 
-  // ============================================================
-  // MANEJO DE OPERACIONES
-  // ============================================================
-
   Future<void> _run(Future<void> Function() action) async {
-    // Evitar operaciones simultáneas.
     if (loading) return;
 
     loading = true;
     error = null;
-
     notifyListeners();
 
     try {
@@ -505,17 +496,12 @@ class MapProvider extends ChangeNotifier {
     } catch (e, stackTrace) {
       debugPrint('MapProvider error: $e');
       debugPrintStack(stackTrace: stackTrace);
-
       error = _friendlyError(e);
     } finally {
       loading = false;
       notifyListeners();
     }
   }
-
-  // ============================================================
-  // ERRORES
-  // ============================================================
 
   String _friendlyError(Object exception) {
     return exception
@@ -524,22 +510,14 @@ class MapProvider extends ChangeNotifier {
         .replaceFirst('Bad state: ', '');
   }
 
-  // ============================================================
-  // LIBERAR RECURSOS
-  // ============================================================
-
   @override
   void dispose() {
     _searchGeneration++;
-
     _searchService.dispose();
     _directionsService.dispose();
-
     super.dispose();
   }
 
-  /// Obtiene las coordenadas geográficas que se encuentran
-  /// exactamente debajo del centro visual del mapa.
   Future<void> selectCenterCoordinate({required Size mapSize}) async {
     if (_map == null || !mapReady) {
       error = 'El mapa todavía no está inicializado';
@@ -554,27 +532,17 @@ class MapProvider extends ChangeNotifier {
     }
 
     try {
-      // Centro del widget MapWidget en coordenadas de pantalla.
       final double middleX = mapSize.width / 2;
       final double middleY = mapSize.height / 2;
 
-      // Convertir el píxel central en coordenadas geográficas.
       final point = await _map!.coordinateForPixel(
         ScreenCoordinate(x: middleX, y: middleY),
       );
 
       final position = point.coordinates;
-
       final latitude = position.lat.toDouble();
       final longitude = position.lng.toDouble();
 
-      debugPrint('📍 Coordenadas seleccionadas:');
-      debugPrint('Latitud: $latitude');
-      debugPrint('Longitud: $longitude');
-
-      // Reutilizamos tu método existente.
-      // Este método debe encargarse del reverse geocoding,
-      // marcador y actualización del destino seleccionado.
       await selectMapCoordinate(latitude: latitude, longitude: longitude);
     } catch (e) {
       error = 'Error al obtener las coordenadas: $e';

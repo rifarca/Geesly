@@ -17,11 +17,6 @@ class MenuNeoGlassNagivationBar extends StatefulWidget {
 
 class _MenuNeoGlassNagivationBarState
     extends State<MenuNeoGlassNagivationBar> {
-  @override
-  void initState() {
-    super.initState();
-//Future.microtask(_loadProviders);
-  }
 /*
   Future<void> _loadProviders({bool forceRefresh = false}) async {
    final configProvider = context.read<ConfigProvider>();

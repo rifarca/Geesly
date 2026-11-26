@@ -1,11 +1,13 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
+
 import 'package:geesly/components/MenuNeoGlassNavigationBar.dart';
 import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
-import '../../providers/map_provider.dart';
+import '../providers/map_provider.dart';
 import '../components/vehicle_selection.dart';
 import '../state/trip_box.dart';
 
@@ -29,7 +31,7 @@ class _MapScreenStep2State extends State<MapScreenStep2> {
 
   bool _routeRequested = false;
 
-  static const double _panelHeightClosed = 230;
+  static const double _panelHeightClosed = 320;
   double _panelHeightOpen = 460;
 
   double _fabHeight = 245;
@@ -304,7 +306,7 @@ class _MapScreenStep2State extends State<MapScreenStep2> {
                 top: MediaQuery.of(context).padding.top + 10,
                 left: 16,
                 right: 16,
-                child: _buildRouteHeaderBanner(context, tripBox),
+                child: _buildStepHeadeBanner(context, tripBox),
               ),
               SlidingUpPanel(
                 controller: _panelController,
@@ -376,7 +378,7 @@ class _MapScreenStep2State extends State<MapScreenStep2> {
     );
   }
 
-  Widget _buildRouteHeaderBanner(BuildContext context, TripBox tripBox) {
+  Widget _buildStepHeadeBanner(BuildContext context, TripBox tripBox) {
     final theme = Theme.of(context);
     final originLabel = tripBox.origin?.label ?? 'Origen';
     final destLabel = tripBox.destination?.label ?? 'Destino';

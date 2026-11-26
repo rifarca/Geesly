@@ -7,18 +7,14 @@ import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
-import '../../providers/map_provider.dart';
+import '../providers/map_provider.dart';
 import '../state/trip_box.dart';
 
 class MapScreenStep3 extends StatefulWidget {
   final VoidCallback? onBackToStep2;
   final VoidCallback? onCancelTrip;
 
-  const MapScreenStep3({
-    super.key,
-    this.onBackToStep2,
-    this.onCancelTrip,
-  });
+  const MapScreenStep3({super.key, this.onBackToStep2, this.onCancelTrip});
 
   @override
   State<MapScreenStep3> createState() => _MapScreenStep3State();
@@ -156,7 +152,7 @@ class _MapScreenStep3State extends State<MapScreenStep3>
                 top: MediaQuery.of(context).padding.top + 10,
                 left: 16,
                 right: 16,
-                child: _buildStatusBanner(context, tripBox),
+                child: _buildStepHeadeBanner(context, tripBox),
               ),
               SlidingUpPanel(
                 controller: _panelController,
@@ -191,7 +187,7 @@ class _MapScreenStep3State extends State<MapScreenStep3>
                   setState(() {
                     _fabHeight =
                         position * (_panelHeightOpen - _panelHeightClosed) +
-                            _initialFabHeight;
+                        _initialFabHeight;
                   });
                 },
               ),
@@ -216,7 +212,7 @@ class _MapScreenStep3State extends State<MapScreenStep3>
     );
   }
 
-  Widget _buildStatusBanner(BuildContext context, TripBox tripBox) {
+  Widget _buildStepHeadeBanner(BuildContext context, TripBox tripBox) {
     final theme = Theme.of(context);
     final originLabel = tripBox.origin?.label ?? 'Origen';
     final destLabel = tripBox.destination?.label ?? 'Destino';
@@ -227,25 +223,38 @@ class _MapScreenStep3State extends State<MapScreenStep3>
       color: theme.colorScheme.surface.withValues(alpha: 0.96),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Text(
-              _driverFound
-                  ? 'Paso 3 de 3 · ¡Conductor asignado!'
-                  : 'Paso 3 de 3 · Buscando conductor (${_elapsedSeconds}s)',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: _driverFound ? Colors.green.shade700 : theme.colorScheme.primary,
-                fontWeight: FontWeight.w700,
-              ),
+            IconButton(
+              tooltip: 'Cambiar origen o destino',
+              onPressed: () => _handleChangeVehicle(tripBox),
+              icon: const Icon(Icons.arrow_back),
             ),
-            const SizedBox(height: 3),
-            Text(
-              '$originLabel → $destLabel',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _driverFound
+                        ? 'Paso 3 de 3 · ¡Conductor asignado!'
+                        : 'Paso 3 de 3 · Buscando conductor (${_elapsedSeconds}s)',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: _driverFound
+                          ? Colors.green.shade700
+                          : theme.colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '$originLabel → $destLabel',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -263,7 +272,8 @@ class _MapScreenStep3State extends State<MapScreenStep3>
     final theme = Theme.of(context);
     final String vehicleName = vehicle?.name ?? 'Vehículo';
     final double price = (vehicle?.price as num?)?.toDouble() ?? 0;
-    final IconData vehicleIcon = vehicle?.icon ?? Icons.directions_car_filled_rounded;
+    final IconData vehicleIcon =
+        vehicle?.icon ?? Icons.directions_car_filled_rounded;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
@@ -300,13 +310,17 @@ class _MapScreenStep3State extends State<MapScreenStep3>
                                 animation: _radarController,
                                 builder: (context, _) {
                                   return Transform.scale(
-                                    scale: 0.7 + (_radarController.value * 0.45),
+                                    scale:
+                                        0.7 + (_radarController.value * 0.45),
                                     child: Container(
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: theme.colorScheme.primary.withValues(
-                                          alpha: (1 - _radarController.value) * 0.35,
-                                        ),
+                                        color: theme.colorScheme.primary
+                                            .withValues(
+                                              alpha:
+                                                  (1 - _radarController.value) *
+                                                  0.35,
+                                            ),
                                       ),
                                     ),
                                   );
@@ -364,9 +378,8 @@ class _MapScreenStep3State extends State<MapScreenStep3>
                   Container(
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.55,
-                      ),
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.55),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
@@ -407,7 +420,7 @@ class _MapScreenStep3State extends State<MapScreenStep3>
                       child: OutlinedButton(
                         onPressed: () => _handleChangeVehicle(tripBox),
                         style: OutlinedButton.styleFrom(
-                     //    minimumSize: Size( width: double.infinity, height: 40),
+                          //    minimumSize: Size( width: double.infinity, height: 40),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -420,7 +433,7 @@ class _MapScreenStep3State extends State<MapScreenStep3>
                       child: ElevatedButton(
                         onPressed: () => _handleCancelTrip(tripBox),
                         style: ElevatedButton.styleFrom(
-                        //  minimumSize: const Size.fromHeight(48),
+                          //  minimumSize: const Size.fromHeight(48),
                           backgroundColor: Colors.red.shade600,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
@@ -446,9 +459,8 @@ class _MapScreenStep3State extends State<MapScreenStep3>
     required String value,
     bool isBold = false,
   }) {
-    final style = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontWeight: isBold ? FontWeight.w800 : FontWeight.w500,
-        );
+    final style = Theme.of(context).textTheme.bodyMedium
+        ?.copyWith(fontWeight: isBold ? FontWeight.w800 : FontWeight.w500);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

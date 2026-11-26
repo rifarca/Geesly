@@ -51,14 +51,15 @@ class _VehicleSelectionWidgetState extends State<VehicleSelectionWidget> {
   @override
   void initState() {
     super.initState();
-    _selectedId = widget.initialSelectedId ??
+    _selectedId =
+        widget.initialSelectedId ??
         (widget.options.isNotEmpty ? widget.options.first.id : '');
   }
 
   VehicleOption get _selectedVehicle => widget.options.firstWhere(
-        (v) => v.id == _selectedId,
-        orElse: () => widget.options.first,
-      );
+    (v) => v.id == _selectedId,
+    orElse: () => widget.options.first,
+  );
 
   /// Formatea el precio con separador de miles si es necesario
   String _formatPrice(double price) {
@@ -73,7 +74,9 @@ class _VehicleSelectionWidgetState extends State<VehicleSelectionWidget> {
   @override
   Widget build(BuildContext context) {
     if (widget.options.isEmpty) {
-      return const Center(child: Text('No hay vehículos disponibles en esta zona.'));
+      return const Center(
+        child: Text('No hay vehículos disponibles en esta zona.'),
+      );
     }
 
     return Container(
@@ -121,82 +124,94 @@ class _VehicleSelectionWidgetState extends State<VehicleSelectionWidget> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: ListView.separated(
-              controller: widget.scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: widget.options.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final vehicle = widget.options[index];
-                final isSelected = vehicle.id == _selectedId;
-
-                return _VehicleTile(
-                  vehicle: vehicle,
-                  isSelected: isSelected,
-                  formattedPrice: _formatPrice(vehicle.price),
-                  onTap: () {
-                    setState(() => _selectedId = vehicle.id);
-                    widget.onVehicleSelected(vehicle);
-                  },
-                );
-              },
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -4),
-                ),
-              ],
-            ),
-            child: SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: () => widget.onConfirmPressed(_selectedVehicle),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF111827),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+            child: Column(
+              children: [
+                ListView.separated(
+                  shrinkWrap: true,
+                  controller: widget.scrollController,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
+                  itemCount: widget.options.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final vehicle = widget.options[index];
+                    final isSelected = vehicle.id == _selectedId;
+
+                    return _VehicleTile(
+                      vehicle: vehicle,
+                      isSelected: isSelected,
+                      formattedPrice: _formatPrice(vehicle.price),
+                      onTap: () {
+                        setState(() => _selectedId = vehicle.id);
+                        widget.onVehicleSelected(vehicle);
+                      },
+                    );
+                  },
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Confirmar ${_selectedVehicle.name}',
-                      style: const TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                Container(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, -4),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        _formatPrice(_selectedVehicle.price),
-                        style: const TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                    ],
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: () =>
+                          widget.onConfirmPressed(_selectedVehicle),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF111827),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Confirmar ${_selectedVehicle.name}',
+                            style: const TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              _formatPrice(_selectedVehicle.price),
+                              style: const TextStyle(
+                                fontFamily: 'Roboto',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
@@ -220,7 +235,9 @@ class _VehicleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = isSelected ? const Color(0xFF111827) : Colors.grey.shade200;
+    final borderColor = isSelected
+        ? const Color(0xFF111827)
+        : Colors.grey.shade200;
     final bgColor = isSelected ? const Color(0xFFF3F4F6) : Colors.white;
 
     return InkWell(
@@ -232,10 +249,7 @@ class _VehicleTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: borderColor,
-            width: isSelected ? 2.0 : 1.0,
-          ),
+          border: Border.all(color: borderColor, width: isSelected ? 2.0 : 1.0),
         ),
         child: Row(
           children: [
@@ -249,7 +263,9 @@ class _VehicleTile extends StatelessWidget {
               child: Icon(
                 vehicle.icon,
                 size: 28,
-                color: isSelected ? const Color(0xFF111827) : Colors.grey.shade700,
+                color: isSelected
+                    ? const Color(0xFF111827)
+                    : Colors.grey.shade700,
               ),
             ),
             const SizedBox(width: 14),
@@ -311,7 +327,10 @@ class _VehicleTile extends StatelessWidget {
                 if (vehicle.isPromo)
                   Container(
                     margin: const EdgeInsets.only(top: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFDCFCE7),
                       borderRadius: BorderRadius.circular(6),

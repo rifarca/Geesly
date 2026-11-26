@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "251986562473",
+    "project_id": "geeslyapp",
+    "storage_bucket": "geeslyapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:251986562473:android:c200c152702edd2e6948b8",
+        "android_client_info": {
+          "package_name": "com.geeslyapp.customer.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "251986562473-cujepbu41pq4vurv4d07pho3f1qijasr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpnBtF08J0KFpHAR5zA9jbvI-lt0IBm5s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "251986562473-cujepbu41pq4vurv4d07pho3f1qijasr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "251986562473-hm9uqc1fh7fd1qa585gbpqbdj5ikvhpa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.geeslyapp.customer.geesly"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

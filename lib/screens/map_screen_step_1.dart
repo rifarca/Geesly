@@ -3,11 +3,12 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:geesly/components/MenuNeoGlassNavigationBar.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
-import '../../providers/map_provider.dart';
+import '../providers/map_provider.dart';
 import '../state/trip_box.dart';
 
 class MapScreenStep1 extends StatefulWidget {
@@ -36,7 +37,7 @@ class _MapScreenStep1State extends State<MapScreenStep1> {
 
   bool _isSelectingByCenter = false;
 
-  static const double _panelHeightClosed = 235;
+  static const double _panelHeightClosed = 380;
   double _panelHeightOpen = 0;
 
   double _fabHeight = 250;
@@ -313,7 +314,7 @@ class _MapScreenStep1State extends State<MapScreenStep1> {
               if (_isSelectingByCenter)
                 const Center(
                   child: Icon(
-                    Icons.center_focus_strong,
+                    Icons.center_focus_weak,
                     size: 48,
                     color: Colors.redAccent,
                   ),
@@ -347,6 +348,12 @@ class _MapScreenStep1State extends State<MapScreenStep1> {
                     ),
                   ),
                 ),
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 10,
+                left: 16,
+                right: 16,
+                child: _buildStepHeadeBanner(context, tripBox),
+              ),
               Positioned(
                 top: 0,
                 left: 0,
@@ -469,14 +476,7 @@ class _MapScreenStep1State extends State<MapScreenStep1> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Paso 1 de 3 · Origen y destino',
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
+                         
                           Text(
                             '¿A dónde vamos?',
                             style: theme.textTheme.titleLarge?.copyWith(
@@ -589,6 +589,25 @@ class _MapScreenStep1State extends State<MapScreenStep1> {
                   ],
                   const SizedBox(height: 14),
                   _buildSavedCoordsSummary(context, tripBox),
+                  ElevatedButton.icon(
+                    onPressed: tripBox.canProceedToStep2
+                        ? () => _goToNextStep(tripBox)
+                        : null,
+                    icon: const Icon(Icons.arrow_forward_rounded),
+                    label: const Text(
+                      'Continuar al trazado y tarifas',
+                      style: TextStyle(
+                        fontFamily: 'Roboto',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -726,4 +745,65 @@ class _MapScreenStep1State extends State<MapScreenStep1> {
       ),
     );
   }
+
+  Widget _buildStepHeadeBanner(BuildContext context, TripBox tripBox) {
+    final theme = Theme.of(context);
+    final originLabel = tripBox.origin?.label ?? 'Origen';
+    final destLabel = tripBox.destination?.label ?? 'Destino';
+    final kmText = tripBox.distanceKm != null
+        ? '${tripBox.distanceKm!.toStringAsFixed(1)} km'
+        : 'Calculando...';
+    final minText = tripBox.durationMinutes != null
+        ? '${tripBox.durationMinutes!.round()} min'
+        : '';
+
+    return Material(
+      elevation: 4,
+      borderRadius: BorderRadius.circular(18),
+      color: theme.colorScheme.surface.withValues(alpha: 0.96),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            IconButton(
+              tooltip: 'Cambiar origen o destino',
+              onPressed: () => _handleBackToHome(context),
+              icon: const Icon(Icons.arrow_back),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Paso 1 de 3 · Origen y destino',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const SizedBox(height: 2),
+                  Text(
+                    '$originLabel → $destLabel',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _handleBackToHome(BuildContext ctx) {
+    ctx.pop();
+  }
+
+    
+  
 }

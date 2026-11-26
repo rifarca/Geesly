@@ -1,13 +1,67 @@
-
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:geesly/components/MenuNeoGlassNavigationBar.dart';
+import 'package:geesly/providers/auth_provider.dart';
+import 'package:geesly/screens/auth/login_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  final VoidCallback? onExploreMap;
+
+  const HomeScreen({super.key, this.onExploreMap});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _redirecting = false;
+
+  void _enforceAuthentication(BuildContext context, AuthProvider auth) {
+    if (!auth.isAuthenticated && !_redirecting) {
+      _redirecting = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => LoginScreen(
+              onAuthenticated: () {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  (route) => false,
+                );
+              },
+            ),
+          ),
+          (route) => false,
+        );
+      });
+    }
+  }
+
+  Future<void> _handleSignOut(BuildContext context) async {
+    await context.read<AuthProvider>().signOut();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     final primary = Theme.of(context).colorScheme.primary;
+
+    // Si no ha iniciado sesión ni se ha registrado, bloquea el acceso y redirige
+    if (!auth.isAuthenticated) {
+      _enforceAuthentication(context, auth);
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final user = auth.user;
+    final String firstName = (user?.displayName?.trim().isNotEmpty == true)
+        ? user!.displayName!.trim().split(' ').first
+        : 'viajero';
 
     return Scaffold(
       bottomNavigationBar: MenuNeoGlassNagivationBar(selectedItem: 0),
@@ -43,17 +97,23 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const Spacer(),
                   IconButton(
+                    tooltip: 'Notificaciones',
                     onPressed: () {},
                     icon: const Icon(Icons.notifications_none),
+                  ),
+                  IconButton(
+                    tooltip: 'Cerrar sesión',
+                    onPressed: () => _handleSignOut(context),
+                    icon: const Icon(Icons.logout_rounded),
                   ),
                 ],
               ),
 
               const SizedBox(height: 35),
 
-              const Text(
-                '¡Hola!',
-                style: TextStyle(
+              Text(
+                '¡Hola, $firstName!',
+                style: const TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.bold,
                 ),
@@ -73,11 +133,7 @@ class HomeScreen extends StatelessWidget {
 
               // Acceso al mapa
               InkWell(
-                onTap: () {
-                  // La navegación principal se controla
-                  // desde HomeScreen.
-                  // Este botón puede conectarse mediante callback.
-                },
+                onTap: widget.onExploreMap ?? () {},
                 borderRadius: BorderRadius.circular(22),
                 child: Container(
                   width: double.infinity,

@@ -2,16 +2,14 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../../components/MenuNeoGlassNavigationBar.dart';
-import '../../providers/map_provider.dart';
+import '../../providers/map_provider_2.dart';
 import '../../components/vehicle_selection.dart';
 
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -198,25 +196,23 @@ class _MapScreenState extends State<MapScreen> {
     if (_mapboxMap == null) return;
 
     final cameraState = await _mapboxMap!.getCameraState();
-    if (cameraState.center != null) {
-      final coordinates = cameraState.center.coordinates;
-      final lng = coordinates[0]!.toDouble();
-      final lat = coordinates[1]!.toDouble();
+    final coordinates = cameraState.center.coordinates;
+    final lng = coordinates[0]!.toDouble();
+    final lat = coordinates[1]!.toDouble();
 
-      await provider.selectMapCoordinate(latitude: lat, longitude: lng);
+    await provider.selectMapCoordinate(latitude: lat, longitude: lng);
 
-      if (!mounted) return;
+    if (!mounted) return;
 
-      setState(() {
-        _isSelectingByCenter = false;
-        _destinationController.text =
-            provider.placeAddress ?? 'Ubicación central';
-      });
+    setState(() {
+      _isSelectingByCenter = false;
+      _destinationController.text =
+          provider.placeAddress ?? 'Ubicación central';
+    });
 
-      await _calculateRoute(provider);
-      //_openPanel();
-      // context.push('/travel-step-2');
-    }
+    await _calculateRoute(provider);
+    //_openPanel();
+    // context.push('/travel-step-2');
   }
 
   Future<void> _selectDestination(MapProvider provider, dynamic item) async {

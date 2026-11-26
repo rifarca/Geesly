@@ -292,10 +292,6 @@ class _MapboxScreenState extends State<MapboxScreen> {
 
 
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   Widget _show() {
     return TextButton(
