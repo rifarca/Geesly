@@ -246,7 +246,7 @@ class _MapScreenStep2State extends State<MapScreenStep2> {
 
   List<VehicleOption> _getAvailableVehicles(MapProvider provider) {
     // Distancia en kilómetros obtenida de la ruta de Mapbox (por defecto 5 km si es null)
-    final double distanceKm = provider.routeDistance ?? 5.0;
+    final double distanceKm = provider.routeDistance ?? 0.01;
     
     // Tarifas base estimadas por kilómetro (ej. en Guaraníes Gs.)
     final double baseMoto = 4500;

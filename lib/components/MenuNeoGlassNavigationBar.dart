@@ -72,7 +72,7 @@ class _MenuNeoGlassNagivationBarState
     return NeoGlassNavigationBar(
      
       currentIndex: widget.selectedItem,
-      selectedItemColor: const Color(0xFF10B981),
+     
       unselectedItemColor: isDark
           ? const Color.fromARGB(253, 255, 255, 255)
           : const Color(0xFF131313),
@@ -84,7 +84,7 @@ class _MenuNeoGlassNagivationBarState
         NeoGlassNavItem(
           activeIcon: CupertinoIcons.house_fill,
           icon: CupertinoIcons.house, 
-          label: '', 
+          label: 'Inicio', 
 
         ),
        

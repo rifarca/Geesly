@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>251986562473-hm9uqc1fh7fd1qa585gbpqbdj5ikvhpa.apps.googleusercontent.com</string>
+	<string>251986562473-jqeeadbk9me7jskd3eurgq2gjdkdhene.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.251986562473-hm9uqc1fh7fd1qa585gbpqbdj5ikvhpa</string>
+	<string>com.googleusercontent.apps.251986562473-jqeeadbk9me7jskd3eurgq2gjdkdhene</string>
 	<key>API_KEY</key>
 	<string>AIzaSyB0EbMEGbibwo0yphbcfmy6ZMxrOvtfgXg</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,7 +13,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.geeslyapp.customer.geesly</string>
+	<string>com.geeslyapp.customer.ios</string>
 	<key>PROJECT_ID</key>
 	<string>geeslyapp</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:251986562473:ios:d78de34d8707fb416948b8</string>
+	<string>1:251986562473:ios:79c1b228c784ff206948b8</string>
 </dict>
 </plist>

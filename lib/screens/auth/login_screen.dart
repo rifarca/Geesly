@@ -32,9 +32,9 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleSuccess() {
     if (widget.onAuthenticated != null) {
       widget.onAuthenticated!();
-      context.go('/');
+    
     } else if (mounted) {
-      //context.go('/');
+      context.goNamed('/');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('¡Bienvenido de nuevo a Geesly!')),
       );

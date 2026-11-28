@@ -65,11 +65,12 @@ class DefaultFirebaseOptions {
   );
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyB0EbMEGbibwo0yphbcfmy6ZMxrOvtfgXg',
-    appId: '1:251986562473:ios:d78de34d8707fb416948b8',
+    appId: '1:251986562473:ios:79c1b228c784ff206948b8',
     messagingSenderId: '251986562473',
     projectId: 'geeslyapp',
     storageBucket: 'geeslyapp.firebasestorage.app',
-    iosClientId: '251986562473-hm9uqc1fh7fd1qa585gbpqbdj5ikvhpa.apps.googleusercontent.com',
-    iosBundleId: 'com.geeslyapp.customer.geesly',
+    iosClientId:
+        '251986562473-jqeeadbk9me7jskd3eurgq2gjdkdhene.apps.googleusercontent.com',
+    iosBundleId: 'com.geeslyapp.customer.ios',
   );
 }

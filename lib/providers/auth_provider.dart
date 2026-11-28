@@ -12,11 +12,18 @@ class AuthProvider extends ChangeNotifier {
   // (debe terminar en .apps.googleusercontent.com, NO en :web:...)
   static const String _googleServerClientId =
       '251986562473-cujepbu41pq4vurv4d07pho3f1qijasr.apps.googleusercontent.com';
-
+  static const String _appleServerClientId =
+      '51986562473-jqeeadbk9me7jskd3eurgq2gjdkdhene.apps.googleusercontent.com';
   static const List<String> _googleScopes = ['email', 'profile'];
+  static const List<AppleIDAuthorizationScopes> _appleScopes = [
+    AppleIDAuthorizationScopes.email,
+    AppleIDAuthorizationScopes.fullName,
+  ];
 
+  static const String _appleServerCallbackRedirect =
+      'https://geeslyapp.firebaseapp.com/__/auth/handler';
   bool _isGoogleInitialized = false;
-
+  final bool _isAppleInicialized = false;
   User? _user;
   bool _isLoading = false;
   String? _errorMessage;
@@ -57,7 +64,9 @@ class AuthProvider extends ChangeNotifier {
       serverClientId: kIsWeb ? null : _googleServerClientId,
     );
     _isGoogleInitialized = true;
+  
   }
+
 
   Future<T?> _runAuthAction<T>(Future<T> Function() action) async {
     _setError(null);
@@ -71,7 +80,9 @@ class AuthProvider extends ChangeNotifier {
       if (e.code == GoogleSignInExceptionCode.canceled) {
         return null;
       }
-      _setError(e.description ?? 'Error al iniciar sesión con Google (${e.code})');
+      _setError(
+        e.description ?? 'Error al iniciar sesión con Google (${e.code})',
+      );
       return null;
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) {
@@ -179,8 +190,9 @@ class AuthProvider extends ChangeNotifier {
         );
       }
 
-      final OAuthCredential credential =
-          FacebookAuthProvider.credential(result.accessToken!.tokenString);
+      final OAuthCredential credential = FacebookAuthProvider.credential(
+        result.accessToken!.tokenString,
+      );
 
       return await _auth.signInWithCredential(credential);
     });
@@ -193,14 +205,16 @@ class AuthProvider extends ChangeNotifier {
         final appleProvider = AppleAuthProvider()
           ..addScope('email')
           ..addScope('name');
+
         return await _auth.signInWithPopup(appleProvider);
       }
 
       final appleCredential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
+        scopes: _appleScopes,
+        /* webAuthenticationOptions: WebAuthenticationOptions(
+          clientId: _appleServerClientId,
+          redirectUri: Uri.parse(_appleServerCallbackRedirect),
+        ),*/
       );
 
       final idToken = appleCredential.identityToken;
@@ -213,7 +227,6 @@ class AuthProvider extends ChangeNotifier {
 
       // En AppleAuthProvider.credential: 1er arg = idToken, 2do arg = accessToken / authorizationCode
       final OAuthCredential credential = AppleAuthProvider.credential(
-        
         appleCredential.authorizationCode,
       );
 
